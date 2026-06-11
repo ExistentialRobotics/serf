@@ -1,9 +1,381 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
-    <title>My Page</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SERF: Spatiotemporal Environment and Robot Feature Map</title>
+    <meta
+      name="description"
+      content="Project page for SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation."
+    />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css?v=29" />
+    <script src="scripts.js?v=24" defer></script>
   </head>
   <body>
-    Hello world!
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <h1>SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation</h1>
+          <p class="authors">
+            <a href="https://sunghwan.me/">Sunghwan Kim</a><sup>1</sup><sup>*</sup>,
+            <a href="https://byeonghyunpak.github.io/">Byeonghyun Pak</a><sup>2</sup><sup>*</sup>,
+            <a href="https://kehanlong.github.io/">Kehan Long</a><sup>3</sup>,
+            <a href="https://www.tianyulun.com/">Yulun Tian</a><sup>4</sup>,
+            <a href="https://natanaso.github.io/">Nikolay Atanasov</a><sup>1</sup>
+          </p>
+          <p class="affiliations"><sup>1</sup>UC San Diego &nbsp; <sup>2</sup>Agency for Defense Development &nbsp; <sup>3</sup>SceniX Inc. &nbsp; <sup>4</sup>University of Michigan</p>
+          <div class="venues" aria-label="Accepted venues and awards">
+            <p>
+              <a href="https://xingxingzuo.github.io/MM-SpatialAI/">
+                IEEE ICRA 2026 Workshop on Multi-Modal Spatial AI,
+              </a>
+              <span class="award">Best Paper Award</span>
+            </p>
+            <!-- <p class="venue-secondary">
+              <a href="https://www.dynsyslab.org/icra2026-workshop-on-semantics-for-reliable-robot-autonomy/">
+                IEEE ICRA 2026 Workshop on Semantics for Reliable Robot Autonomy
+              </a>
+            </p> -->
+          </div>
+          <div class="actions" aria-label="Paper links">
+            <span class="button is-disabled" aria-disabled="true" aria-label="arXiv page coming soon">
+              <img src="assets/arxiv.svg" alt="" aria-hidden="true" />
+              arXiv
+            </span>
+            <a class="button" href="https://xingxingzuo.github.io/MM-SpatialAI/assets/papers/submission-33-4d-latent-mapping-for-mobile-manipulation-policy-learning.pdf" target="_blank" rel="noopener" aria-label="Open workshop paper PDF">
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" />
+                <path d="M14 2v5h5" />
+                <path d="M9 13h6" />
+                <path d="M9 17h6" />
+              </svg>
+              PDF (Workshop)
+            </a>
+            <span class="button is-disabled" aria-disabled="true" aria-label="Code repository coming soon">
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="m9 18-6-6 6-6" />
+                <path d="m15 6 6 6-6 6" />
+              </svg>
+              Code
+            </span>
+            <a class="button" href="https://youtu.be/Lxrb3o0_LgE?si=Cml0qfjPbIW99F5S" target="_blank" rel="noopener" aria-label="Open YouTube video">
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path
+                  d="m23.5 6.2s-.2-1.7-.9-2.4c-.9-.9-1.9-.9-2.4-1C16.8 2.5 12 2.5 12 2.5s-4.8 0-8.2.3c-.5.1-1.5.1-2.4 1C.7 4.5.5 6.2.5 6.2S.2 8.2.2 10.2v1.9c0 2 .3 4 .3 4s.2 1.7.9 2.4c.9.9 2.1.9 2.6 1 1.9.2 8 .3 8 .3s4.8 0 8.2-.3c.5-.1 1.5-.1 2.4-1 .7-.7.9-2.4.9-2.4s.3-2 .3-4v-1.9c0-2-.3-4-.3-4z"
+                />
+                <path
+                  d="M9.8 14.7V7.8l6.4 3.5-6.4 3.4z"
+                  fill="white"
+                />
+              </svg>
+              Video
+            </a>
+          </div>
+          <!-- <div class="video-frame">
+            <video class="project-video" controls autoplay muted playsinline preload="metadata">
+              <source src="assets/technical_video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div> -->
+          <div class="video-frame">
+            <iframe
+              class="project-video"
+              src="https://www.youtube.com/embed/Lxrb3o0_LgE"
+              title="Project video"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+      </section>
+
+      <section id="serf-map" class="section">
+        <div class="section-heading">
+          <h2>Spatiotemporal Environment and Robot Feature (SERF) Map</h2>
+          <p class="section-description">A persistent spatial memory for the robot, objects, and task-relevant scene state.</p>
+        </div>
+        <div class="map-copy">
+          <p class="section-description">
+            Our SERF map maintains a 4D scene representation of both the environment and the robot body in a shared latent feature space. 
+            We build the map using neural points, which are 3D points with learnable features trained to reconstruct dense DINO embeddings.
+          </p>
+          <p class="section-description">
+            To track changes, we construct 3D keypoint correspondences between consecutive observations, estimate an object-level rigid transform, and update the corresponding points. 
+            We extend the neural points to the robot body by sampling surface points from a URDF and positioning them via forward kinematics at each step.
+          </p>
+        </div>
+        <div id="latent-map-examples" class="task-rotator" data-task-rotator>
+          <div class="task-rotator-header">
+            <div>
+              <p class="task-kicker">BEHAVIOR-1K</p>
+              <h3 data-task-title>Task 21: Collecting Children's Toys</h3>
+              <p class="task-note">Videos are played at 20x speed.</p>
+            </div>
+            <div class="task-tabs" role="tablist" aria-label="Select visualization task">
+              <button id="task-tab-21" class="task-tab is-active" type="button" role="tab" data-task-button="0" aria-controls="task-panel-21" aria-selected="true">Task 21</button>
+              <button id="task-tab-22" class="task-tab" type="button" role="tab" data-task-button="1" aria-controls="task-panel-22" aria-selected="false" tabindex="-1">Task 22</button>
+              <button id="task-tab-26" class="task-tab" type="button" role="tab" data-task-button="2" aria-controls="task-panel-26" aria-selected="false" tabindex="-1">Task 26</button>
+            </div>
+          </div>
+
+          <div class="task-video-groups">
+            <article id="task-panel-21" class="task-video-group is-active" role="tabpanel" aria-labelledby="task-tab-21" data-task-panel data-title="Task 21: Collecting Children's Toys">
+              <div class="latent-video-grid">
+                <figure class="latent-video-card">
+                  <figcaption>Third-Person View</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0021_third_person_x20.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+                <figure class="latent-video-card is-rgb-observation">
+                  <figcaption>Egocentric Robot Observations</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0021episode_00210050_rgb_head_wrists_20x.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+                <figure class="latent-video-card">
+                  <figcaption>SERF Map PCA Visualization</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0021_pca_21_x20.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+              </div>
+            </article>
+
+            <article id="task-panel-22" class="task-video-group" role="tabpanel" aria-labelledby="task-tab-22" data-task-panel data-title="Task 22: Putting Shoes On Rack" hidden>
+              <div class="latent-video-grid">
+                <figure class="latent-video-card">
+                  <figcaption>Third-Person View</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0022_third_person_x20.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+                <figure class="latent-video-card is-rgb-observation">
+                  <figcaption>Robot Observation</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0022_episode_00222490_rgb_head_wrists_20x.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+                <figure class="latent-video-card">
+                  <figcaption>SERF Map PCA Visualization</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0022_pca_22_x20.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+              </div>
+            </article>
+
+            <article id="task-panel-26" class="task-video-group" role="tabpanel" aria-labelledby="task-tab-26" data-task-panel data-title="Task 26: Assembling Gift Baskets" hidden>
+              <div class="latent-video-grid">
+                <figure class="latent-video-card">
+                  <figcaption>Third-Person View</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0026_third_person_x20.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+                <figure class="latent-video-card is-rgb-observation">
+                  <figcaption>Robot Observation</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0026_episode_00262690_rgb_head_wrists_20x.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+                <figure class="latent-video-card">
+                  <figcaption>SERF Map PCA Visualization</figcaption>
+                  <video muted loop playsinline preload="metadata">
+                    <source src="assets/map_visualizations/task-0026_pca_26_x20.mp4" type="video/mp4" />
+                  </video>
+                </figure>
+              </div>
+            </article>
+          </div>
+          <p class="latent-video-summary">
+            <strong>We construct and maintain the SERF map using only egocentric observations and proprioceptive state</strong>
+          </p>
+        </div>
+      </section>
+
+      <section id="policy-learning" class="section">
+        <div class="section-heading">
+          <h2>Map-conditioned VLA Policy</h2>
+          <p class="section-description">SERF map tokens provide a VLA policy with an explicit spatial representation.</p>
+        </div>
+        <div class="map-copy">
+          <p class="section-description">
+            We condition the VLA policy on SERF map tokens in addition to RGB observations,
+            proprioceptive state, and the task embedding. We tokenize the SERF map across multiple reference frames,
+            including global, end-effector, and robot-base frames, to capture both local and global context.
+            These tokens provide the SERF VLA policy with allocentric scene memory and egocentric robot-environment context for long-horizon action decisions.
+          </p>
+        </div>
+        <figure class="framework-figure">
+          <img src="assets/framework.png" alt="Map-conditioned VLA policy framework using SERF map tokens." />
+        </figure>
+      </section>
+
+      <section id="experiments" class="section experiments-section">
+        <div class="section-heading">
+          <h2>Evaluation</h2>
+        </div>
+
+        <div class="experiments-intro">
+          <p class="section-description">
+            We evaluate whether the SERF policy improves long-horizon mobile manipulation compared with an image-only VLA policy by providing persistent spatiotemporal memory.
+            We also evaluate whether SERF supports scene-configuration generalization and failure recovery.
+          </p>
+        </div>
+
+        <div class="experiment-stack">
+          <article class="experiment-block">
+            <div class="experiment-copy">
+              <p class="experiment-kicker">Long-Horizon Mobile Manipulation</p>
+              <h3>BEHAVIOR-1K Task Progress</h3>
+              <p class="section-description">
+                SERF outperforms PI0.5 (Image-only) across all tasks, follows more direct trajectories, and reaches subgoals faster.
+              </p>
+            </div>
+
+            <div id="rollout-comparison" class="task-rotator rollout-rotator" data-task-rotator>
+              <div class="task-rotator-header">
+                <div>
+                  <h3 data-task-title>Task 21: Collecting Children's Toys</h3>
+                  <p class="task-note">Videos are played at 20x speed.</p>
+                </div>
+                <div class="task-tabs" role="tablist" aria-label="Select rollout task">
+                  <button id="rollout-tab-21" class="task-tab is-active" type="button" role="tab" data-task-button="0" aria-controls="rollout-panel-21" aria-selected="true">Task 21</button>
+                  <button id="rollout-tab-22" class="task-tab" type="button" role="tab" data-task-button="1" aria-controls="rollout-panel-22" aria-selected="false" tabindex="-1">Task 22</button>
+                  <button id="rollout-tab-26" class="task-tab" type="button" role="tab" data-task-button="2" aria-controls="rollout-panel-26" aria-selected="false" tabindex="-1">Task 26</button>
+                </div>
+              </div>
+
+              <div class="task-video-groups">
+                <article id="rollout-panel-21" class="task-video-group is-active" role="tabpanel" aria-labelledby="rollout-tab-21" data-task-panel data-title="Task 21: Collecting Children's Toys">
+                  <div class="policy-comparison-grid">
+                    <figure class="latent-video-card is-placeholder" data-media-slot data-media-type="video" data-media-src="assets/experiments/task-0021_pi0.5.mp4" data-media-label="Task 21 PI0.5 (Image-only) rollout">
+                      <figcaption>PI0.5 (Image-only)</figcaption>
+                      <div class="media-placeholder" role="img" aria-label="Task 21 PI0.5 (Image-only) rollout video placeholder">
+                        <span>assets/experiments/task-0021_pi0.5.mp4</span>
+                      </div>
+                    </figure>
+                    <figure class="latent-video-card is-placeholder" data-media-slot data-media-type="video" data-media-src="assets/experiments/task-0021_ours.mp4" data-media-label="Task 21 SERF (Map-conditioned) rollout">
+                      <figcaption>SERF (Map-conditioned)</figcaption>
+                      <div class="media-placeholder" role="img" aria-label="Task 21 SERF (Map-conditioned) rollout video placeholder">
+                        <span>assets/experiments/task-0021_ours.mp4</span>
+                      </div>
+                    </figure>
+                  </div>
+                </article>
+
+                <article id="rollout-panel-22" class="task-video-group" role="tabpanel" aria-labelledby="rollout-tab-22" data-task-panel data-title="Task 22: Putting Shoes On Rack" hidden>
+                  <div class="policy-comparison-grid">
+                    <figure class="latent-video-card is-placeholder" data-media-slot data-media-type="video" data-media-src="assets/experiments/task-0022_pi0.5.mp4" data-media-label="Task 22 PI0.5 (Image-only) rollout">
+                      <figcaption>PI0.5 (Image-only)</figcaption>
+                      <div class="media-placeholder" role="img" aria-label="Task 22 PI0.5 (Image-only) rollout video placeholder">
+                        <span>assets/experiments/task-0022_pi0.5.mp4</span>
+                      </div>
+                    </figure>
+                    <figure class="latent-video-card is-placeholder" data-media-slot data-media-type="video" data-media-src="assets/experiments/task-0022_ours.mp4" data-media-label="Task 22 SERF (Map-conditioned) rollout">
+                      <figcaption>SERF (Map-conditioned)</figcaption>
+                      <div class="media-placeholder" role="img" aria-label="Task 22 SERF (Map-conditioned) rollout video placeholder">
+                        <span>assets/experiments/task-0022_ours.mp4</span>
+                      </div>
+                    </figure>
+                  </div>
+                </article>
+
+                <article id="rollout-panel-26" class="task-video-group" role="tabpanel" aria-labelledby="rollout-tab-26" data-task-panel data-title="Task 26: Assembling Gift Baskets" hidden>
+                  <div class="policy-comparison-grid">
+                    <figure class="latent-video-card is-placeholder" data-media-slot data-media-type="video" data-media-src="assets/experiments/task-0026_pi0.5.mp4" data-media-label="Task 26 PI0.5 (Image-only) rollout">
+                      <figcaption>PI0.5 (Image-only)</figcaption>
+                      <div class="media-placeholder" role="img" aria-label="Task 26 PI0.5 (Image-only) rollout video placeholder">
+                        <span>assets/experiments/task-0026_pi0.5.mp4</span>
+                      </div>
+                    </figure>
+                    <figure class="latent-video-card is-placeholder" data-media-slot data-media-type="video" data-media-src="assets/experiments/task-0026_ours.mp4" data-media-label="Task 26 SERF (Map-conditioned) rollout">
+                      <figcaption>SERF (Map-conditioned)</figcaption>
+                      <div class="media-placeholder" role="img" aria-label="Task 26 SERF (Map-conditioned) rollout video placeholder">
+                        <span>assets/experiments/task-0026_ours.mp4</span>
+                      </div>
+                    </figure>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </article>
+
+          <article class="experiment-block">
+            <div class="experiment-copy">
+              <p class="experiment-kicker">Scene-Configuration Generalization</p>
+              <h3>Out-of-Distribution (OOD) Configuration Shifts</h3>
+              <p class="section-description">
+                Policies are trained only on the original in-distribution scenes and evaluated on a
+                moved goal location, additional target objects, and target objects placed in an
+                unvisited navigation region. SERF achieves higher task progress across all three
+                variations, suggesting that explicit spatial representation supports robust behavior
+                under out-of-distribution (OOD) configuration shifts.
+              </p>
+            </div>
+            <figure class="scene-chart-card" data-scene-config-chart>
+              <div class="scene-chart-topline">
+                <div>
+                  <p class="scene-chart-kicker">Out-of-Distribution (OOD) Settings</p>
+                  <h4>Scene-Configuration Generalization</h4>
+                </div>
+              </div>
+              <div class="scene-chart-stage" data-chart-stage></div>
+              <figcaption>
+                Task progress (%) under test-time scene shifts.
+              </figcaption>
+            </figure>
+          </article>
+
+          <article class="experiment-block">
+            <div class="experiment-copy">
+              <p class="experiment-kicker">Failure Recovery</p>
+              <h3>Object-Drop Recovery</h3>
+              <p class="section-description">
+                To induce the failure, we open the gripper during transport so the held object drops
+                and leaves the camera view, then resume both policies from the same post-drop state.
+                SERF re-localizes and re-grasps the dropped object more reliably.
+              </p>
+            </div>
+            <div class="experiment-video-grid">
+              <figure class="result-video-card recovery-video-card" data-media-slot data-media-type="video" data-media-src="assets/recovery/image_ft_recovery_result_x4.mp4" data-media-label="PI0.5 (Image-only) recovery rollout">
+                <figcaption>PI0.5 (Image-only)</figcaption>
+                <div class="media-placeholder" role="img" aria-label="PI0.5 (Image-only) recovery video placeholder">
+                  <span>assets/recovery/image_ft_recovery_result_x4.mp4</span>
+                </div>
+              </figure>
+              <figure class="result-video-card recovery-video-card" data-media-slot data-media-type="video" data-media-src="assets/recovery/ours_recovery_result_x4.mp4" data-media-label="SERF (Map-conditioned) recovery rollout">
+                <figcaption>SERF (Map-conditioned)</figcaption>
+                <div class="media-placeholder" role="img" aria-label="SERF (Map-conditioned) recovery video placeholder">
+                  <span>assets/recovery/ours_recovery_result_x4.mp4</span>
+                </div>
+              </figure>
+            </div>
+            <figure class="recovery-chart-card" data-recovery-chart>
+              <div class="recovery-chart-topline">
+                <div>
+                  <p class="scene-chart-kicker">Failure Recovery</p>
+                  <h4>Recovery from Object-Drop Failures</h4>
+                </div>
+              </div>
+              <div class="recovery-chart-stage" data-recovery-chart-stage></div>
+                <figcaption>
+                  Success rate over 20 recovery trials and mean recovery time.
+                </figcaption>
+            </figure>
+          </article>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>
+        Project page for SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation.
+      </p>
+    </footer>
   </body>
 </html>
