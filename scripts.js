@@ -313,7 +313,8 @@ document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
     { label: "SERF", color: "#8fc7f4" },
   ];
 
-  const maxValue = 100;
+  const minValue = 20;
+  const maxValue = 70;
   const svgNS = "http://www.w3.org/2000/svg";
   const make = (name, attrs = {}) => {
     const element = document.createElementNS(svgNS, name);
@@ -389,7 +390,7 @@ document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
     const barGap = isMobile ? 10 : 16;
     const labelStartY = margin.top + chartHeight + (isMobile ? 27 : 34);
     const labelLineHeight = isMobile ? 19 : 15;
-    const y = (value) => margin.top + chartHeight - (value / maxValue) * chartHeight;
+    const y = (value) => margin.top + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
 
     hideTooltip();
     stage.replaceChildren();
@@ -438,7 +439,7 @@ document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
     svg.append(legend);
 
     const grid = make("g");
-    [0, 25, 50, 75, 100].forEach((tick) => {
+    [20, 30, 40, 50, 60, 70].forEach((tick) => {
       const tickY = y(tick);
       grid.append(
         make("line", {
