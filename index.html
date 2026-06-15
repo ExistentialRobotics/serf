@@ -9,8 +9,8 @@
       content="Project page for SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation."
     />
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css?v=29" />
-    <script src="scripts.js?v=24" defer></script>
+    <link rel="stylesheet" href="styles.css?v=42" />
+    <script src="scripts.js?v=30" defer></script>
   </head>
   <body>
     <main id="top">
@@ -94,7 +94,7 @@
       <section id="serf-map" class="section">
         <div class="section-heading">
           <h2>Spatiotemporal Environment and Robot Feature (SERF) Map</h2>
-          <p class="section-description">A persistent spatial memory for the robot, objects, and task-relevant scene state.</p>
+          <p class="section-heading-description">A persistent spatial memory for the robot, objects, and task-relevant scene state.</p>
         </div>
         <div class="map-copy">
           <p class="section-description">
@@ -153,7 +153,7 @@
                   </video>
                 </figure>
                 <figure class="latent-video-card is-rgb-observation">
-                  <figcaption>Robot Observation</figcaption>
+                  <figcaption>Egocentric Robot Observations</figcaption>
                   <video muted loop playsinline preload="metadata">
                     <source src="assets/map_visualizations/task-0022_episode_00222490_rgb_head_wrists_20x.mp4" type="video/mp4" />
                   </video>
@@ -176,7 +176,7 @@
                   </video>
                 </figure>
                 <figure class="latent-video-card is-rgb-observation">
-                  <figcaption>Robot Observation</figcaption>
+                  <figcaption>Egocentric Robot Observations</figcaption>
                   <video muted loop playsinline preload="metadata">
                     <source src="assets/map_visualizations/task-0026_episode_00262690_rgb_head_wrists_20x.mp4" type="video/mp4" />
                   </video>
@@ -199,7 +199,7 @@
       <section id="policy-learning" class="section">
         <div class="section-heading">
           <h2>Map-conditioned VLA Policy</h2>
-          <p class="section-description">SERF map tokens provide a VLA policy with an explicit spatial representation.</p>
+          <p class="section-heading-description">SERF map tokens provide a VLA policy with an explicit spatial representation.</p>
         </div>
         <div class="map-copy">
           <p class="section-description">
@@ -325,7 +325,7 @@
               </div>
               <div class="scene-chart-stage" data-chart-stage></div>
               <figcaption>
-                Task progress (%) under test-time scene shifts.
+                Task progress (%) under test-time scene configuration shifts.
               </figcaption>
             </figure>
           </article>
@@ -363,10 +363,45 @@
               </div>
               <div class="recovery-chart-stage" data-recovery-chart-stage></div>
                 <figcaption>
-                  Success rate over 20 recovery trials and mean recovery time.
+                  Success rate and average recovery time over 20 recovery trials.
                 </figcaption>
             </figure>
           </article>
+        </div>
+      </section>
+
+      <section id="acknowledgements" class="section acknowledgements-section">
+        <div class="section-heading">
+          <h2>Acknowledgements</h2>
+        </div>
+        <p class="section-description">
+          We gratefully acknowledge support from NSF CCF-2402689 (ExpandAI), NSF 2120019 (CHASECI), and the Agency for Defense Development grant funded by the Korean Government (912A45701).
+        </p>
+      </section>
+
+      <section id="citations" class="section citation-section">
+        <div class="section-heading">
+          <h2>Citations</h2>
+        </div>
+        <div class="citation-card" data-citation-card>
+          <div class="citation-card-header">
+            <h3>BibTeX</h3>
+            <button class="button citation-copy-button" type="button" data-copy-bibtex data-copy-target="#serf-bibtex" aria-label="Copy BibTeX" aria-live="polite">
+              <span class="copy-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <rect x="8" y="8" width="12" height="12" rx="2" />
+                  <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+                </svg>
+              </span>
+              <span class="copy-feedback" data-copy-feedback>Copied</span>
+            </button>
+          </div>
+          <pre class="bibtex-box"><code id="serf-bibtex">@article{kim2026serf,
+  title = {SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation},
+  author = {Kim, Sunghwan and Pak, Byeonghyun and Long, Kehan and Tian, Yulun and Atanasov, Nikolay},
+  journal = {arXiv preprint arXiv:2606.12956},
+  year = {2026}
+}</code></pre>
         </div>
       </section>
 
@@ -374,7 +409,7 @@
 
     <footer>
       <p>
-        Project page for SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation.
+        SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation.
       </p>
     </footer>
   </body>

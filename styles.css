@@ -18,7 +18,7 @@
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: "Iowan Old Style", Charter, Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
-  --paper-title-size: clamp(1.4rem, 2.35vw, 2.65rem);
+  --paper-title-size: clamp(2.0rem, 2.0vw, 2.3rem);
   --muted: var(--neutral-600);
   --surface: #ffffff;
 }
@@ -54,7 +54,7 @@ video:focus-visible {
 }
 
 .hero {
-  width: min(980px, calc(100% - 48px));
+  width: min(920px, calc(100% - 48px));
   margin: 0 auto;
   padding: 48px 0 42px;
 }
@@ -209,7 +209,7 @@ figcaption {
 }
 
 .section {
-  width: min(980px, calc(100% - 48px));
+  width: min(920px, calc(100% - 48px));
   margin: 0 auto;
   padding: 28px 0;
 }
@@ -225,19 +225,27 @@ figcaption {
 
 .section-heading {
   display: grid;
-  gap: 0.45rem;
-  margin-bottom: 1.35rem;
-  padding-bottom: 0.7rem;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
   border-bottom: 1px solid var(--rule);
+  color: var(--neutral-600);
 }
 
-.section-description {
-  max-width: 760px;
+.section-description,
+.section-heading-description {
+  max-width: 1000px;
   margin-bottom: 0;
-  color: var(--neutral-600);
   font-size: 0.92rem;
   line-height: 1.68;
   text-wrap: pretty;
+}
+
+.section-heading-description {
+  color: var(--neutral-500);
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 400;
 }
 
 .map-copy,
@@ -383,6 +391,12 @@ figcaption {
   line-height: 1.45;
 }
 
+.scene-chart-card figcaption,
+.recovery-chart-card figcaption {
+  padding: 8px 12px 0;
+  text-align: center;
+}
+
 .latent-video-card figcaption {
   border-bottom: 1px solid var(--rule-soft);
 }
@@ -413,6 +427,7 @@ figcaption {
 .scene-chart-card {
   margin: 0;
   padding: 16px;
+  padding-bottom: 10px;
   border: 1px solid var(--rule-soft);
   border-radius: 12px;
   background: var(--neutral-50);
@@ -422,6 +437,7 @@ figcaption {
 .recovery-chart-card {
   margin: 0;
   padding: 16px;
+  padding-bottom: 10px;
   border: 1px solid var(--rule-soft);
   border-radius: 12px;
   background: var(--neutral-50);
@@ -466,6 +482,106 @@ figcaption {
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.3;
+}
+
+.citation-card {
+  overflow: hidden;
+  border: 1px solid var(--rule-soft);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.citation-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px 8px;
+}
+
+.citation-card-header h3 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.citation-copy-button {
+  flex: 0 0 auto;
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--neutral-700);
+  background: var(--surface);
+}
+
+.citation-copy-button .copy-icon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.citation-copy-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.citation-copy-button .copy-feedback {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.citation-copy-button.is-copied,
+.citation-copy-button.is-failed {
+  width: auto;
+  min-width: 68px;
+  padding: 0 10px;
+}
+
+.citation-copy-button.is-failed {
+  min-width: 94px;
+}
+
+.citation-copy-button.is-copied .copy-icon,
+.citation-copy-button.is-failed .copy-icon {
+  display: none;
+}
+
+.citation-copy-button.is-copied .copy-feedback,
+.citation-copy-button.is-failed .copy-feedback {
+  display: inline;
+}
+
+.citation-copy-button.is-copied {
+  color: var(--accent);
+}
+
+.citation-copy-button.is-failed {
+  color: var(--neutral-700);
+}
+
+.bibtex-box {
+  overflow-x: auto;
+  margin: 0;
+  padding: 0 16px 14px;
+  background: transparent;
+  color: var(--neutral-700);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.acknowledgements-section .section-description {
+  max-width: 100%;
 }
 
 .scene-chart-stage {
@@ -519,6 +635,10 @@ figcaption {
 .scene-chart-label:focus-visible {
   fill: var(--accent);
   text-decoration-color: currentColor;
+}
+
+.scene-chart-label:not([role="button"]) {
+  text-decoration: none;
 }
 
 .recovery-chart-label {
@@ -729,7 +849,7 @@ figcaption {
 }
 
 .rollout-rotator {
-  margin-top: 18px;
+  margin-top: 0px;
 }
 
 .rollout-rotator .policy-comparison-grid {
@@ -860,12 +980,72 @@ figcaption {
 }
 
 footer {
-  width: min(980px, calc(100% - 48px));
+  width: min(920px, calc(100% - 48px));
   margin: 0 auto;
   padding: 30px 0 52px;
   border-top: 1px solid var(--rule);
   color: var(--neutral-600);
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+footer p {
+  margin-bottom: 0;
+}
+
+@media (min-width: 1100px) {
+  .hero,
+  .section,
+  footer {
+    width: min(980px, calc(100% - 72px));
+  }
+
+  h1 {
+    font-size: 2.4rem;
+    line-height: 1.04;
+  }
+
+  .authors {
+    font-size: 1.2rem;
+  }
+
+  .venues,
+  .award {
+    font-size: 1.2rem;
+  }
+
+  .section h2 {
+    font-size: 2rem;
+  }
+
+  .section-description,
+  .section-heading-description {
+    font-size: 1rem;
+  }
+
+  .map-copy .section-description,
+  .experiments-intro .section-description,
+  .experiment-copy .section-description {
+    font-size: 1.06rem;
+  }
+
+  .experiment-copy h3 {
+    font-size: 1.34rem;
+  }
+
+  .latent-video-summary {
+    font-size: 1.16rem;
+  }
+
+  .citation-card-header h3 {
+    font-size: 1.08rem;
+  }
+
+  .bibtex-box {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 860px) {
@@ -874,7 +1054,18 @@ footer {
   }
 
   h1 {
-    font-size: 2.2rem;
+    font-size: clamp(2.0rem, 6.6vw, 2.4rem);
+    line-height: 1.06;
+  }
+
+  .authors {
+    font-size: 1.12rem;
+    line-height: 1.55;
+  }
+
+  .venues,
+  .award {
+    font-size: 1.08rem;
   }
 
   .section-heading,
@@ -892,14 +1083,138 @@ footer {
     display: grid;
   }
 
+  .recovery-chart-topline {
+    display: grid;
+  }
+
   .task-tabs {
     width: 100%;
   }
 
   .task-tab {
     flex: 1;
+    min-width: 0;
+    white-space: nowrap;
   }
 
+}
+
+@media (max-width: 640px) {
+  .hero,
+  .section,
+  footer {
+    width: calc(100% - 36px);
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 6.6vw, 1.8rem);
+    line-height: 1.06;
+  }
+
+  .section {
+    padding: 24px 0;
+  }
+
+  .section h2 {
+    font-size: 1.62rem;
+    line-height: 1.18;
+  }
+
+  .section-heading {
+    margin-bottom: 0.8rem;
+  }
+
+  .section-description,
+  .section-heading-description,
+  .map-copy .section-description,
+  .experiments-intro .section-description,
+  .experiment-copy .section-description {
+    font-size: 0.98rem;
+    line-height: 1.7;
+  }
+
+  .task-rotator {
+    gap: 14px;
+    margin-top: 22px;
+  }
+
+  .task-rotator h3 {
+    font-size: 1.14rem;
+  }
+
+  .task-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .task-tab {
+    padding: 6px 5px;
+    font-size: 0.73rem;
+  }
+
+  .scene-chart-card,
+  .recovery-chart-card {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .scene-chart-topline,
+  .recovery-chart-topline {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .scene-chart-topline h4,
+  .recovery-chart-topline h4 {
+    font-size: 1.05rem;
+  }
+
+  .scene-chart-stage,
+  .recovery-chart-stage {
+    border-radius: 8px;
+  }
+
+  .scene-chart-label,
+  .recovery-chart-label {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .scene-chart-axis-title,
+  .recovery-chart-axis-title {
+    font-size: 20px;
+  }
+
+  .scene-chart-svg-legend-label,
+  .recovery-chart-svg-legend-label {
+    font-size: 20px;
+  }
+
+  .scene-chart-value-label,
+  .recovery-chart-value-label {
+    font-size: 20px;
+  }
+
+  .scene-chart-card figcaption,
+  .recovery-chart-card figcaption,
+  .latent-video-card figcaption,
+  .result-video-card figcaption {
+    font-size: 0.9rem;
+  }
+
+  .citation-card-header {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+  }
+
+  .citation-copy-button {
+    margin-left: auto;
+  }
+
+  .bibtex-box {
+    font-size: 0.76rem;
+  }
 }
 
 @media (max-width: 520px) {
@@ -909,24 +1224,50 @@ footer {
   }
 
   h1 {
-    font-size: 1.9rem;
+    font-size: clamp(1.6rem, 10.2vw, 1.8rem);
+    line-height: 1.05;
+  }
+
+  .authors {
+    font-size: 1.02rem;
+  }
+
+  .affiliations {
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+
+  .venues,
+  .award {
+    font-size: 1rem;
+    line-height: 1.4;
   }
 
   .actions {
     display: flex;
+    gap: 7px;
   }
 
   .button {
     width: auto;
+    min-height: 34px;
+    padding: 7px 9px;
+    font-size: 0.75rem;
+  }
+
+  .policy-comparison-grid,
+  .rollout-rotator .policy-comparison-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .rollout-rotator .policy-comparison-grid {
-    gap: 6px;
+    justify-content: stretch;
   }
 
   .rollout-rotator .latent-video-card figcaption {
-    padding: 7px 6px;
-    font-size: 0.78rem;
+    padding: 8px 9px;
+    font-size: 0.86rem;
   }
 
 }

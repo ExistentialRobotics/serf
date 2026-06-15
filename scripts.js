@@ -1,3 +1,79 @@
+document.querySelectorAll("[data-copy-bibtex]").forEach((button) => {
+  const targetSelector = button.dataset.copyTarget;
+  const target = targetSelector ? document.querySelector(targetSelector) : null;
+  const feedback = button.querySelector("[data-copy-feedback]");
+  const defaultLabel = button.getAttribute("aria-label") || "Copy BibTeX";
+  let resetTimer = null;
+
+  if (!target) {
+    return;
+  }
+
+  const fallbackCopy = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.append(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+
+    if (!copied) {
+      throw new Error("Copy command failed");
+    }
+  };
+
+  const setStatus = (message) => {
+    if (resetTimer !== null) {
+      window.clearTimeout(resetTimer);
+    }
+
+    const isCopied = message === "Copied";
+    const isFailed = message === "Copy failed";
+
+    button.classList.toggle("is-copied", isCopied);
+    button.classList.toggle("is-failed", isFailed);
+    button.setAttribute("aria-label", isCopied ? "Copied BibTeX" : message);
+
+    if (feedback) {
+      feedback.textContent = message;
+    }
+
+    resetTimer = window.setTimeout(() => {
+      button.classList.remove("is-copied");
+      button.classList.remove("is-failed");
+      button.setAttribute("aria-label", defaultLabel);
+
+      if (feedback) {
+        feedback.textContent = "Copied";
+      }
+    }, 2200);
+  };
+
+  button.addEventListener("click", async () => {
+    const bibtex = target.textContent.trim();
+
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(bibtex);
+      } else {
+        fallbackCopy(bibtex);
+      }
+
+      setStatus("Copied");
+    } catch (error) {
+      try {
+        fallbackCopy(bibtex);
+        setStatus("Copied");
+      } catch (fallbackError) {
+        setStatus("Copy failed");
+      }
+    }
+  });
+});
+
 document.querySelectorAll("[data-task-rotator]").forEach((rotator) => {
   const panels = Array.from(rotator.querySelectorAll("[data-task-panel]"));
   const buttons = Array.from(rotator.querySelectorAll("[data-task-button]"));
@@ -191,6 +267,17 @@ document.querySelectorAll("[data-media-slot]").forEach((slot) => {
   }
 });
 
+const mobileChartMedia = window.matchMedia("(max-width: 640px)");
+
+const watchMobileChartChanges = (render) => {
+  if (mobileChartMedia.addEventListener) {
+    mobileChartMedia.addEventListener("change", render);
+    return;
+  }
+
+  mobileChartMedia.addListener(render);
+};
+
 document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
   const stage = chart.querySelector("[data-chart-stage]");
 
@@ -201,18 +288,21 @@ document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
   const tasks = [
     {
       label: ["Moved Goal"],
+      mobileLabel: ["Moved", "Goal"],
       scores: [42.9, 50.8],
       image: "assets/ood/moved-goal.png",
       alt: "Moved Goal out-of-distribution (OOD) scene-configuration setting.",
     },
     {
       label: ["Additional Objects"],
+      mobileLabel: ["Additional", "Objects"],
       scores: [50.6, 63.0],
       image: "assets/ood/additional-objects.png",
       alt: "Additional Objects out-of-distribution (OOD) scene-configuration setting.",
     },
     {
       label: ["Unvisited Region"],
+      mobileLabel: ["Unvisited", "Region"],
       scores: [28.0, 51.0],
       image: "assets/ood/unvisited-region.png",
       alt: "Unvisited Region out-of-distribution (OOD) scene-configuration setting.",
@@ -223,18 +313,8 @@ document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
     { label: "SERF", color: "#8fc7f4" },
   ];
 
+  const maxValue = 100;
   const svgNS = "http://www.w3.org/2000/svg";
-  const width = 920;
-  const height = 360;
-  const margin = { top: 64, right: 28, bottom: 70, left: 82 };
-  const chartWidth = width - margin.left - margin.right;
-  const chartHeight = height - margin.top - margin.bottom;
-  const minValue = 20;
-  const maxValue = 70;
-  const groupWidth = chartWidth / tasks.length;
-  const barWidth = 82;
-  const barGap = 16;
-  const y = (value) => margin.top + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
   const make = (name, attrs = {}) => {
     const element = document.createElementNS(svgNS, name);
     Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
@@ -295,164 +375,187 @@ document.querySelectorAll("[data-scene-config-chart]").forEach((chart) => {
     ].join(" ");
   };
 
-  const svg = make("svg", {
-    viewBox: `0 0 ${width} ${height}`,
-    role: "img",
-    "aria-label": "Scene-configuration generalization bar chart.",
-  });
+  const render = () => {
+    const isMobile = mobileChartMedia.matches;
+    const width = isMobile ? 736 : 920;
+    const height = isMobile ? 288 : 360;
+    const margin = isMobile
+      ? { top: 52, right: 18, bottom: 66, left: 62 }
+      : { top: 64, right: 28, bottom: 70, left: 82 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    const groupWidth = chartWidth / tasks.length;
+    const barWidth = isMobile ? 68 : 82;
+    const barGap = isMobile ? 10 : 16;
+    const labelStartY = margin.top + chartHeight + (isMobile ? 27 : 34);
+    const labelLineHeight = isMobile ? 19 : 15;
+    const y = (value) => margin.top + chartHeight - (value / maxValue) * chartHeight;
 
-  const axisTitle = make("text", {
-    class: "scene-chart-axis-title",
-    x: 0,
-    y: 0,
-    transform: `translate(24 ${margin.top + chartHeight / 2}) rotate(-90)`,
-    "text-anchor": "middle",
-  });
-  axisTitle.textContent = "Task Progress (%) ⬆︎";
-  svg.append(axisTitle);
+    hideTooltip();
+    stage.replaceChildren();
 
-  const legend = make("g", {
-    class: "scene-chart-svg-legend",
-    transform: `translate(${width / 2 - 122} 20)`,
-  });
-  methods.forEach((method, index) => {
-    const itemX = index * 142;
-    legend.append(
-      make("rect", {
-        class: "scene-chart-svg-legend-swatch",
-        x: itemX,
-        y: 0,
-        width: 16,
-        height: 16,
-        rx: 4,
-        fill: method.color,
-      })
-    );
-    const label = make("text", {
-      class: "scene-chart-svg-legend-label",
-      x: itemX + 24,
-      y: 13,
+    const svg = make("svg", {
+      viewBox: `0 0 ${width} ${height}`,
+      role: "img",
+      "aria-label": "Scene-configuration generalization bar chart.",
     });
-    label.textContent = method.label;
-    legend.append(label);
-  });
-  svg.append(legend);
 
-  const grid = make("g");
-  [20, 30, 40, 50, 60, 70].forEach((tick) => {
-    const tickY = y(tick);
-    grid.append(
-      make("line", {
-        class: "scene-chart-grid-line",
-        x1: margin.left,
-        x2: width - margin.right,
-        y1: tickY,
-        y2: tickY,
-      })
-    );
-    const label = make("text", {
-      class: "scene-chart-label",
-      x: margin.left - 12,
-      y: tickY + 4,
-      "text-anchor": "end",
+    const axisTitle = make("text", {
+      class: "scene-chart-axis-title",
+      x: 0,
+      y: 0,
+      transform: `translate(${isMobile ? 20 : 24} ${margin.top + chartHeight / 2}) rotate(-90)`,
+      "text-anchor": "middle",
     });
-    label.textContent = String(tick);
-    grid.append(label);
-  });
-  svg.append(grid);
+    axisTitle.textContent = "Task Progress (%) ⬆︎";
+    svg.append(axisTitle);
 
-  const bars = [];
-  const setActive = (activeBar) => {
-    bars.forEach((bar) => {
-      const isActive = bar === activeBar;
-      bar.classList.toggle("is-active", isActive);
-      bar.classList.toggle("is-dimmed", !isActive);
+    const legend = make("g", {
+      class: "scene-chart-svg-legend",
+      transform: `translate(${isMobile ? width / 2 - 142 : width / 2 - 122} ${isMobile ? 18 : 20})`,
     });
-  };
-  const clearActive = () => {
-    bars.forEach((bar) => {
-      bar.classList.remove("is-active", "is-dimmed");
-    });
-  };
-
-  tasks.forEach((task, taskIndex) => {
-    const groupCenter = margin.left + groupWidth * taskIndex + groupWidth / 2;
-    const firstBarX = groupCenter - barWidth - barGap / 2;
-
-    methods.forEach((method, methodIndex) => {
-      const score = task.scores[methodIndex];
-      const barX = firstBarX + methodIndex * (barWidth + barGap);
-      const barY = y(score);
-      const barHeight = margin.top + chartHeight - barY;
-      const bar = make("g", {
-        class: "scene-chart-bar",
-        tabindex: "0",
-        role: "button",
-        "aria-label": `${method.label}, ${task.label.join(" ")}, ${score.toFixed(1)} percent`,
-      });
-
-      bar.append(
-        make("path", {
-          d: roundedTopBarPath(barX, barY, barWidth, barHeight, 9),
+    methods.forEach((method, index) => {
+      const itemX = index * (isMobile ? 164 : 142);
+      legend.append(
+        make("rect", {
+          class: "scene-chart-svg-legend-swatch",
+          x: itemX,
+          y: 0,
+          width: isMobile ? 20 : 16,
+          height: isMobile ? 20 : 16,
+          rx: 4,
           fill: method.color,
         })
       );
-
-      const valueLabel = make("text", {
-        class: "scene-chart-value-label",
-        x: barX + barWidth / 2,
-        y: Math.max(margin.top + 12, barY - 8),
-        "text-anchor": "middle",
+      const label = make("text", {
+        class: "scene-chart-svg-legend-label",
+        x: itemX + (isMobile ? 30 : 24),
+        y: isMobile ? 17 : 13,
       });
-      valueLabel.textContent = score.toFixed(1);
-      bar.append(valueLabel);
-
-      const activateBar = () => {
-        setActive(bar);
-      };
-      bar.addEventListener("pointerenter", activateBar);
-      bar.addEventListener("focus", activateBar);
-      bar.addEventListener("click", activateBar);
-      bar.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          activateBar();
-        }
-      });
-      bars.push(bar);
-      svg.append(bar);
+      label.textContent = method.label;
+      legend.append(label);
     });
+    svg.append(legend);
 
-    task.label.forEach((line, lineIndex) => {
+    const grid = make("g");
+    [0, 25, 50, 75, 100].forEach((tick) => {
+      const tickY = y(tick);
+      grid.append(
+        make("line", {
+          class: "scene-chart-grid-line",
+          x1: margin.left,
+          x2: width - margin.right,
+          y1: tickY,
+          y2: tickY,
+        })
+      );
       const label = make("text", {
         class: "scene-chart-label",
-        x: groupCenter,
-        y: margin.top + chartHeight + 34 + lineIndex * 15,
-        "text-anchor": "middle",
-        tabindex: "0",
-        role: "button",
-        "aria-label": `Preview ${task.label.join(" ")} out-of-distribution (OOD) setting`,
+        x: margin.left - (isMobile ? 10 : 12),
+        y: tickY + (isMobile ? 7 : 4),
+        "text-anchor": "end",
       });
-      label.textContent = line;
-      label.addEventListener("pointerenter", (event) => showTooltip(taskIndex, event.currentTarget));
-      label.addEventListener("focus", (event) => showTooltip(taskIndex, event.currentTarget));
-      label.addEventListener("click", (event) => showTooltip(taskIndex, event.currentTarget));
-      label.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          showTooltip(taskIndex, label);
-        }
-      });
-      label.addEventListener("pointerleave", hideTooltip);
-      label.addEventListener("blur", hideTooltip);
-      svg.append(label);
+      label.textContent = String(tick);
+      grid.append(label);
     });
-  });
+    svg.append(grid);
 
-  hideTooltip();
-  svg.addEventListener("pointerleave", clearActive);
+    const bars = [];
+    const setActive = (activeBar) => {
+      bars.forEach((bar) => {
+        const isActive = bar === activeBar;
+        bar.classList.toggle("is-active", isActive);
+        bar.classList.toggle("is-dimmed", !isActive);
+      });
+    };
+    const clearActive = () => {
+      bars.forEach((bar) => {
+        bar.classList.remove("is-active", "is-dimmed");
+      });
+    };
+
+    tasks.forEach((task, taskIndex) => {
+      const groupCenter = margin.left + groupWidth * taskIndex + groupWidth / 2;
+      const firstBarX = groupCenter - barWidth - barGap / 2;
+
+      methods.forEach((method, methodIndex) => {
+        const score = task.scores[methodIndex];
+        const barX = firstBarX + methodIndex * (barWidth + barGap);
+        const barY = y(score);
+        const barHeight = margin.top + chartHeight - barY;
+        const bar = make("g", {
+          class: "scene-chart-bar",
+          tabindex: "0",
+          role: "button",
+          "aria-label": `${method.label}, ${task.label.join(" ")}, ${score.toFixed(1)} percent`,
+        });
+
+        bar.append(
+          make("path", {
+            d: roundedTopBarPath(barX, barY, barWidth, barHeight, isMobile ? 6 : 9),
+            fill: method.color,
+          })
+        );
+
+        const valueLabel = make("text", {
+          class: "scene-chart-value-label",
+          x: barX + barWidth / 2,
+          y: Math.max(margin.top + (isMobile ? 18 : 12), barY - (isMobile ? 7 : 8)),
+          "text-anchor": "middle",
+        });
+        valueLabel.textContent = score.toFixed(1);
+        bar.append(valueLabel);
+
+        const activateBar = () => {
+          setActive(bar);
+        };
+        bar.addEventListener("pointerenter", activateBar);
+        bar.addEventListener("focus", activateBar);
+        bar.addEventListener("click", activateBar);
+        bar.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            activateBar();
+          }
+        });
+        bars.push(bar);
+        svg.append(bar);
+      });
+
+      const labelLines = isMobile ? task.mobileLabel : task.label;
+      labelLines.forEach((line, lineIndex) => {
+        const label = make("text", {
+          class: "scene-chart-label",
+          x: groupCenter,
+          y: labelStartY + lineIndex * labelLineHeight,
+          "text-anchor": "middle",
+          tabindex: "0",
+          role: "button",
+          "aria-label": `Preview ${task.label.join(" ")} out-of-distribution (OOD) setting`,
+        });
+        label.textContent = line;
+        label.addEventListener("pointerenter", (event) => showTooltip(taskIndex, event.currentTarget));
+        label.addEventListener("focus", (event) => showTooltip(taskIndex, event.currentTarget));
+        label.addEventListener("click", (event) => showTooltip(taskIndex, event.currentTarget));
+        label.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            showTooltip(taskIndex, label);
+          }
+        });
+        label.addEventListener("pointerleave", hideTooltip);
+        label.addEventListener("blur", hideTooltip);
+        svg.append(label);
+      });
+    });
+
+    svg.addEventListener("pointerleave", clearActive);
+    stage.append(svg);
+  };
+
   chart.addEventListener("pointerleave", hideTooltip);
-  stage.append(svg);
+  render();
+  watchMobileChartChanges(render);
 });
 
 document.querySelectorAll("[data-recovery-chart]").forEach((chart) => {
@@ -470,19 +573,10 @@ document.querySelectorAll("[data-recovery-chart]").forEach((chart) => {
   const barColors = ["#d9d9d9", "#90caf9"];
   const lineColor = "#222222";
   const svgNS = "http://www.w3.org/2000/svg";
-  const width = 920;
-  const height = 360;
-  const margin = { top: 66, right: 84, bottom: 58, left: 76 };
-  const chartWidth = width - margin.left - margin.right;
-  const chartHeight = height - margin.top - margin.bottom;
-  const xStep = chartWidth / methods.length;
-  const barWidth = 150;
   const successMin = 40;
   const successMax = 100;
   const timeMin = 19;
   const timeMax = 25;
-  const ySuccess = (value) => margin.top + chartHeight - ((value - successMin) / (successMax - successMin)) * chartHeight;
-  const yTime = (value) => margin.top + chartHeight - ((value - timeMin) / (timeMax - timeMin)) * chartHeight;
   const make = (name, attrs = {}) => {
     const element = document.createElementNS(svgNS, name);
     Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
@@ -502,151 +596,182 @@ document.querySelectorAll("[data-recovery-chart]").forEach((chart) => {
     ].join(" ");
   };
 
-  const svg = make("svg", {
-    viewBox: `0 0 ${width} ${height}`,
-    role: "img",
-    "aria-label": "Recovery success rate and recovery time chart.",
-  });
-  const axisTitleGap = margin.left - 24;
+  const render = () => {
+    const isMobile = mobileChartMedia.matches;
+    const width = isMobile ? 736 : 920;
+    const height = isMobile ? 288 : 360;
+    const margin = isMobile
+      ? { top: 60, right: 68, bottom: 46, left: 64 }
+      : { top: 66, right: 84, bottom: 58, left: 76 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    const xStep = chartWidth / methods.length;
+    const barWidth = isMobile ? 132 : 150;
+    const ySuccess = (value) => margin.top + chartHeight - ((value - successMin) / (successMax - successMin)) * chartHeight;
+    const yTime = (value) => margin.top + chartHeight - ((value - timeMin) / (timeMax - timeMin)) * chartHeight;
 
-  const leftTitle = make("text", {
-    class: "recovery-chart-axis-title",
-    x: 0,
-    y: 0,
-    transform: `translate(${margin.left - axisTitleGap} ${margin.top + chartHeight / 2}) rotate(-90)`,
-    "text-anchor": "middle",
-  });
-  leftTitle.textContent = "Success Rate (%) ⬆︎";
-  svg.append(leftTitle);
+    stage.replaceChildren();
 
-  const rightTitle = make("text", {
-    class: "recovery-chart-axis-title",
-    x: 0,
-    y: 0,
-    transform: `translate(${width - margin.right + axisTitleGap} ${margin.top + chartHeight / 2}) rotate(90)`,
-    "text-anchor": "middle",
-  });
-  rightTitle.textContent = "Recovery Time (s) ⬇︎";
-  svg.append(rightTitle);
-
-  const legend = make("g", {
-    transform: `translate(${width / 2 - 184} 22)`,
-  });
-  legend.append(make("rect", { x: 0, y: 0, width: 16, height: 16, rx: 4, fill: "#d9d9d9" }));
-  const successLegend = make("text", { class: "recovery-chart-svg-legend-label", x: 24, y: 13 });
-  successLegend.textContent = "Success Rate";
-  legend.append(successLegend);
-  legend.append(make("line", { x1: 178, x2: 214, y1: 8, y2: 8, stroke: lineColor, "stroke-width": 3, "stroke-linecap": "round" }));
-  legend.append(make("circle", { class: "recovery-chart-marker", cx: 196, cy: 8, r: 5 }));
-  const timeLegend = make("text", { class: "recovery-chart-svg-legend-label", x: 224, y: 13 });
-  timeLegend.textContent = "Recovery Time";
-  legend.append(timeLegend);
-  svg.append(legend);
-
-  [40, 60, 80, 100].forEach((tick) => {
-    const tickY = ySuccess(tick);
-    svg.append(make("line", { class: "recovery-chart-grid-line", x1: margin.left, x2: width - margin.right, y1: tickY, y2: tickY }));
-    const label = make("text", { class: "recovery-chart-label", x: margin.left - 12, y: tickY + 4, "text-anchor": "end" });
-    label.textContent = String(tick);
-    svg.append(label);
-  });
-
-  [19, 21, 23, 25].forEach((tick) => {
-    const tickY = yTime(tick);
-    const label = make("text", { class: "recovery-chart-label", x: width - margin.right + 12, y: tickY + 4, "text-anchor": "start" });
-    label.textContent = String(tick);
-    svg.append(label);
-  });
-
-  const linePoints = [];
-  const bars = [];
-  const xLabels = [];
-  const setActive = (activeBar) => {
-    bars.forEach((bar) => {
-      const isActive = bar === activeBar;
-      bar.classList.toggle("is-active", isActive);
-      bar.classList.toggle("is-dimmed", !isActive);
+    const svg = make("svg", {
+      viewBox: `0 0 ${width} ${height}`,
+      role: "img",
+      "aria-label": "Recovery success rate and recovery time chart.",
     });
 
-    xLabels.forEach((label, index) => {
-      label.classList.toggle("is-active", bars[index] === activeBar);
-    });
-  };
-  const clearActive = () => {
-    bars.forEach((bar) => {
-      bar.classList.remove("is-active", "is-dimmed");
-    });
+    const axisTitleGap = isMobile ? 42 : margin.left - 24;
 
-    xLabels.forEach((label) => {
-      label.classList.remove("is-active");
-    });
-  };
-
-  methods.forEach((method, index) => {
-    const centerX = margin.left + xStep * index + xStep / 2;
-    const barX = centerX - barWidth / 2;
-    const barY = ySuccess(successRate[index]);
-    const barHeight = margin.top + chartHeight - barY;
-    const bar = make("g", {
-      class: "recovery-chart-bar",
-      tabindex: "0",
-      role: "button",
-      "aria-label": `${method}, success rate ${successRate[index].toFixed(0)} percent, recovery time ${recoveryTime[index].toFixed(1)} seconds`,
-    });
-    bar.append(make("path", { d: roundedTopBarPath(barX, barY, barWidth, barHeight, 9), fill: barColors[index] }));
-    const valueLabel = make("text", { class: "recovery-chart-value-label", x: centerX, y: barY + 25, "text-anchor": "middle" });
-    valueLabel.textContent = `${successRate[index].toFixed(0)}%`;
-    bar.append(valueLabel);
-
-    const activateBar = () => {
-      setActive(bar);
-    };
-    bar.addEventListener("pointerenter", activateBar);
-    bar.addEventListener("focus", activateBar);
-    bar.addEventListener("click", activateBar);
-    bar.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        activateBar();
-      }
-    });
-    svg.append(bar);
-    bars.push(bar);
-
-    const xLabel = make("text", { class: "recovery-chart-label", x: centerX, y: margin.top + chartHeight + 36, "text-anchor": "middle" });
-    xLabel.textContent = method;
-    xLabel.setAttribute("tabindex", "0");
-    xLabel.setAttribute("role", "button");
-    xLabel.setAttribute("aria-label", `${method} recovery results`);
-    xLabel.addEventListener("pointerenter", activateBar);
-    xLabel.addEventListener("focus", activateBar);
-    xLabel.addEventListener("click", activateBar);
-    xLabel.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        activateBar();
-      }
-    });
-    xLabel.addEventListener("pointerleave", clearActive);
-    xLabel.addEventListener("blur", clearActive);
-    svg.append(xLabel);
-    xLabels.push(xLabel);
-    linePoints.push([centerX, yTime(recoveryTime[index])]);
-  });
-
-  svg.append(make("path", { class: "recovery-chart-line", d: `M ${linePoints[0][0]} ${linePoints[0][1]} L ${linePoints[1][0]} ${linePoints[1][1]}` }));
-  linePoints.forEach(([x, yPoint], index) => {
-    svg.append(make("circle", { class: "recovery-chart-marker", cx: x, cy: yPoint, r: 7 }));
-    const label = make("text", {
-      class: "recovery-chart-value-label",
-      x,
-      y: yPoint + (index === 0 ? -14 : 24),
+    const leftTitle = make("text", {
+      class: "recovery-chart-axis-title",
+      x: 0,
+      y: 0,
+      transform: `translate(${margin.left - axisTitleGap} ${margin.top + chartHeight / 2}) rotate(-90)`,
       "text-anchor": "middle",
     });
-    label.textContent = `${recoveryTime[index].toFixed(1)}s`;
-    svg.append(label);
-  });
+    leftTitle.textContent = "Success Rate (%) ⬆︎";
+    svg.append(leftTitle);
 
-  svg.addEventListener("pointerleave", clearActive);
-  stage.append(svg);
+    const rightTitle = make("text", {
+      class: "recovery-chart-axis-title",
+      x: 0,
+      y: 0,
+      transform: `translate(${width - margin.right + axisTitleGap} ${margin.top + chartHeight / 2}) rotate(90)`,
+      "text-anchor": "middle",
+    });
+    rightTitle.textContent = "Recovery Time (s) ⬇︎";
+    svg.append(rightTitle);
+
+    const legend = make("g", {
+      transform: `translate(${isMobile ? width / 2 - 205 : width / 2 - 184} ${isMobile ? 20 : 22})`,
+    });
+    legend.append(make("rect", { x: 0, y: 0, width: isMobile ? 20 : 16, height: isMobile ? 20 : 16, rx: 4, fill: "#d9d9d9" }));
+    const successLegend = make("text", { class: "recovery-chart-svg-legend-label", x: isMobile ? 30 : 24, y: isMobile ? 17 : 13 });
+    successLegend.textContent = "Success Rate";
+    legend.append(successLegend);
+    legend.append(
+      make("line", {
+        x1: isMobile ? 230 : 178,
+        x2: isMobile ? 276 : 214,
+        y1: isMobile ? 10 : 8,
+        y2: isMobile ? 10 : 8,
+        stroke: lineColor,
+        "stroke-width": 3,
+        "stroke-linecap": "round",
+      })
+    );
+    legend.append(make("circle", { class: "recovery-chart-marker", cx: isMobile ? 253 : 196, cy: isMobile ? 10 : 8, r: isMobile ? 7 : 5 }));
+    const timeLegend = make("text", { class: "recovery-chart-svg-legend-label", x: isMobile ? 300 : 224, y: isMobile ? 17 : 13 });
+    timeLegend.textContent = "Recovery Time";
+    legend.append(timeLegend);
+    svg.append(legend);
+
+    [40, 60, 80, 100].forEach((tick) => {
+      const tickY = ySuccess(tick);
+      svg.append(make("line", { class: "recovery-chart-grid-line", x1: margin.left, x2: width - margin.right, y1: tickY, y2: tickY }));
+      const label = make("text", { class: "recovery-chart-label", x: margin.left - (isMobile ? 10 : 12), y: tickY + (isMobile ? 7 : 4), "text-anchor": "end" });
+      label.textContent = String(tick);
+      svg.append(label);
+    });
+
+    [19, 21, 23, 25].forEach((tick) => {
+      const tickY = yTime(tick);
+      const label = make("text", { class: "recovery-chart-label", x: width - margin.right + (isMobile ? 10 : 12), y: tickY + (isMobile ? 7 : 4), "text-anchor": "start" });
+      label.textContent = String(tick);
+      svg.append(label);
+    });
+
+    const linePoints = [];
+    const bars = [];
+    const xLabels = [];
+    const setActive = (activeBar) => {
+      bars.forEach((bar) => {
+        const isActive = bar === activeBar;
+        bar.classList.toggle("is-active", isActive);
+        bar.classList.toggle("is-dimmed", !isActive);
+      });
+
+      xLabels.forEach((label, index) => {
+        label.classList.toggle("is-active", bars[index] === activeBar);
+      });
+    };
+    const clearActive = () => {
+      bars.forEach((bar) => {
+        bar.classList.remove("is-active", "is-dimmed");
+      });
+
+      xLabels.forEach((label) => {
+        label.classList.remove("is-active");
+      });
+    };
+
+    methods.forEach((method, index) => {
+      const centerX = margin.left + xStep * index + xStep / 2;
+      const barX = centerX - barWidth / 2;
+      const barY = ySuccess(successRate[index]);
+      const barHeight = margin.top + chartHeight - barY;
+      const bar = make("g", {
+        class: "recovery-chart-bar",
+        tabindex: "0",
+        role: "button",
+        "aria-label": `${method}, success rate ${successRate[index].toFixed(0)} percent, recovery time ${recoveryTime[index].toFixed(1)} seconds`,
+      });
+      bar.append(make("path", { d: roundedTopBarPath(barX, barY, barWidth, barHeight, isMobile ? 7 : 9), fill: barColors[index] }));
+      const valueLabel = make("text", { class: "recovery-chart-value-label", x: centerX, y: barY + (isMobile ? 29 : 25), "text-anchor": "middle" });
+      valueLabel.textContent = `${successRate[index].toFixed(0)}%`;
+      bar.append(valueLabel);
+
+      const activateBar = () => {
+        setActive(bar);
+      };
+      bar.addEventListener("pointerenter", activateBar);
+      bar.addEventListener("focus", activateBar);
+      bar.addEventListener("click", activateBar);
+      bar.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activateBar();
+        }
+      });
+      svg.append(bar);
+      bars.push(bar);
+
+      const xLabel = make("text", { class: "recovery-chart-label", x: centerX, y: margin.top + chartHeight + (isMobile ? 34 : 36), "text-anchor": "middle" });
+      xLabel.textContent = method;
+      xLabel.setAttribute("tabindex", "0");
+      xLabel.setAttribute("role", "button");
+      xLabel.setAttribute("aria-label", `${method} recovery results`);
+      xLabel.addEventListener("pointerenter", activateBar);
+      xLabel.addEventListener("focus", activateBar);
+      xLabel.addEventListener("click", activateBar);
+      xLabel.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activateBar();
+        }
+      });
+      xLabel.addEventListener("pointerleave", clearActive);
+      xLabel.addEventListener("blur", clearActive);
+      svg.append(xLabel);
+      xLabels.push(xLabel);
+      linePoints.push([centerX, yTime(recoveryTime[index])]);
+    });
+
+    svg.append(make("path", { class: "recovery-chart-line", d: `M ${linePoints[0][0]} ${linePoints[0][1]} L ${linePoints[1][0]} ${linePoints[1][1]}` }));
+    linePoints.forEach(([x, yPoint], index) => {
+      svg.append(make("circle", { class: "recovery-chart-marker", cx: x, cy: yPoint, r: isMobile ? 8 : 7 }));
+      const label = make("text", {
+        class: "recovery-chart-value-label",
+        x,
+        y: yPoint + (index === 0 ? -14 : 24),
+        "text-anchor": "middle",
+      });
+      label.textContent = `${recoveryTime[index].toFixed(1)}s`;
+      svg.append(label);
+    });
+
+    svg.addEventListener("pointerleave", clearActive);
+    stage.append(svg);
+  };
+
+  render();
+  watchMobileChartChanges(render);
 });
