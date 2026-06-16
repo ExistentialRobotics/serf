@@ -74,6 +74,185 @@ document.querySelectorAll("[data-copy-bibtex]").forEach((button) => {
   });
 });
 
+const playableReadyState = HTMLMediaElement.HAVE_FUTURE_DATA;
+const mediaSlotPromises = new WeakMap();
+
+const waitForPlayable = (video) => {
+  if (video.readyState >= playableReadyState || video.error) {
+    return Promise.resolve(video);
+  }
+
+  return new Promise((resolve) => {
+    const onReady = () => {
+      video.removeEventListener("canplay", onReady);
+      video.removeEventListener("error", onReady);
+      resolve(video);
+    };
+
+    video.addEventListener("canplay", onReady, { once: true });
+    video.addEventListener("error", onReady, { once: true });
+    video.load();
+  });
+};
+
+const prepareMediaSlot = (slot) => {
+  const existingMedia = slot.querySelector("video, img");
+
+  if (existingMedia) {
+    return Promise.resolve(existingMedia);
+  }
+
+  if (mediaSlotPromises.has(slot)) {
+    return mediaSlotPromises.get(slot);
+  }
+
+  const src = slot.dataset.mediaSrc;
+  const type = slot.dataset.mediaType;
+  const placeholder = slot.querySelector(".media-placeholder");
+
+  if (!src || !type || !placeholder) {
+    return Promise.resolve(null);
+  }
+
+  const activateMedia = (media) => {
+    placeholder.replaceWith(media);
+    slot.classList.remove("is-placeholder");
+    return media;
+  };
+
+  if (type === "image") {
+    const image = new Image();
+    image.alt = slot.dataset.mediaAlt || "";
+
+    const readyPromise = new Promise((resolve) => {
+      const onReady = () => resolve(activateMedia(image));
+      image.addEventListener("load", onReady, { once: true });
+      image.addEventListener("error", onReady, { once: true });
+    });
+
+    mediaSlotPromises.set(slot, readyPromise);
+    image.src = src;
+    return readyPromise;
+  }
+
+  if (type === "video") {
+    const video = document.createElement("video");
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.setAttribute("aria-label", slot.dataset.mediaLabel || "Experiment video");
+
+    const source = document.createElement("source");
+    source.src = src;
+    source.type = "video/mp4";
+    video.append(source);
+
+    const readyPromise = waitForPlayable(video).then(() => activateMedia(video));
+    mediaSlotPromises.set(slot, readyPromise);
+    return readyPromise;
+  }
+
+  return Promise.resolve(null);
+};
+
+const getReadyVideos = async (container) => {
+  const media = await Promise.all(
+    Array.from(container.querySelectorAll("[data-media-slot]")).map((slot) => prepareMediaSlot(slot))
+  );
+  const videos = [
+    ...Array.from(container.querySelectorAll("video")),
+    ...media.filter((item) => item && item.tagName === "VIDEO"),
+  ];
+  const uniqueVideos = Array.from(new Set(videos));
+
+  await Promise.all(uniqueVideos.map((video) => waitForPlayable(video)));
+
+  return uniqueVideos.filter((video) => !video.error);
+};
+
+const startSynchronizedVideos = (videos, shouldContinue) => {
+  if (!videos.length || !shouldContinue()) {
+    return () => {};
+  }
+
+  let startRafId = null;
+  let syncRafId = null;
+  let stopped = false;
+
+  const stop = () => {
+    stopped = true;
+    videos.forEach((video) => {
+      video.pause();
+    });
+
+    if (startRafId !== null) {
+      cancelAnimationFrame(startRafId);
+      startRafId = null;
+    }
+
+    if (syncRafId !== null) {
+      cancelAnimationFrame(syncRafId);
+      syncRafId = null;
+    }
+  };
+
+  videos.forEach((video) => {
+    video.pause();
+
+    try {
+      video.currentTime = 0;
+    } catch (error) {
+      // Some browsers reject seeking on errored media; those videos are skipped upstream.
+    }
+  });
+
+  startRafId = requestAnimationFrame(() => {
+    startRafId = null;
+
+    if (stopped || !shouldContinue()) {
+      return;
+    }
+
+    const [master, ...slaves] = videos;
+    const slaveStates = slaves.map((video) => ({
+      video,
+      lastSeek: Number.NEGATIVE_INFINITY,
+    }));
+
+    const syncLoop = () => {
+      if (stopped || !shouldContinue() || master.paused) {
+        stop();
+        return;
+      }
+
+      const targetTime = master.currentTime;
+
+      slaveStates.forEach((state) => {
+        const delta = Math.abs(state.video.currentTime - targetTime);
+        if (delta > 0.04 && Math.abs(state.lastSeek - targetTime) > 0.02) {
+          state.video.currentTime = targetTime;
+          state.lastSeek = targetTime;
+        }
+      });
+
+      syncRafId = requestAnimationFrame(syncLoop);
+    };
+
+    Promise.all(videos.map((video) => video.play().catch(() => {}))).finally(() => {
+      if (!stopped && shouldContinue()) {
+        syncRafId = requestAnimationFrame(syncLoop);
+      }
+    });
+  });
+
+  return stop;
+};
+
+document.querySelectorAll("[data-media-slot]").forEach((slot) => {
+  prepareMediaSlot(slot);
+});
+
 document.querySelectorAll("[data-task-rotator]").forEach((rotator) => {
   const panels = Array.from(rotator.querySelectorAll("[data-task-panel]"));
   const buttons = Array.from(rotator.querySelectorAll("[data-task-button]"));
@@ -84,79 +263,26 @@ document.querySelectorAll("[data-task-rotator]").forEach((rotator) => {
   }
 
   let playbackToken = 0;
-  let syncRafId = null;
-
-  const waitForReady = (video) => {
-    if (video.readyState >= 1) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve) => {
-      video.addEventListener("loadedmetadata", resolve, { once: true });
-    });
-  };
+  let stopCurrentPlayback = () => {};
 
   const stopSync = () => {
-    if (syncRafId !== null) {
-      cancelAnimationFrame(syncRafId);
-      syncRafId = null;
-    }
+    stopCurrentPlayback();
+    stopCurrentPlayback = () => {};
   };
 
   const playPanelVideos = async (panel, token) => {
-    const videos = Array.from(panel.querySelectorAll("video"));
+    const videos = await getReadyVideos(panel);
 
     if (!videos.length) {
       return;
     }
-
-    await Promise.all(videos.map((video) => waitForReady(video)));
 
     if (token !== playbackToken || panel.hidden) {
       return;
     }
 
     stopSync();
-
-    videos.forEach((video) => {
-      video.pause();
-      video.currentTime = 0;
-    });
-
-    requestAnimationFrame(() => {
-      if (token !== playbackToken || panel.hidden) {
-        return;
-      }
-
-      const [master, ...slaves] = videos;
-      const slaveStates = slaves.map((video) => ({
-        video,
-        lastSeek: Number.NEGATIVE_INFINITY,
-      }));
-
-      const syncLoop = () => {
-        if (token !== playbackToken || panel.hidden || master.paused) {
-          stopSync();
-          return;
-        }
-
-        const targetTime = master.currentTime;
-
-        slaveStates.forEach((state) => {
-          const delta = Math.abs(state.video.currentTime - targetTime);
-          if (delta > 0.04 && Math.abs(state.lastSeek - targetTime) > 0.02) {
-            state.video.currentTime = targetTime;
-            state.lastSeek = targetTime;
-          }
-        });
-
-        syncRafId = requestAnimationFrame(syncLoop);
-      };
-
-      Promise.all(videos.map((video) => video.play().catch(() => {}))).finally(() => {
-        syncRafId = requestAnimationFrame(syncLoop);
-      });
-    });
+    stopCurrentPlayback = startSynchronizedVideos(videos, () => token === playbackToken && !panel.hidden);
   };
 
   const pausePanelVideos = (panel) => {
@@ -223,48 +349,9 @@ document.querySelectorAll("[data-task-rotator]").forEach((rotator) => {
   activate(0);
 });
 
-document.querySelectorAll("[data-media-slot]").forEach((slot) => {
-  const src = slot.dataset.mediaSrc;
-  const type = slot.dataset.mediaType;
-  const placeholder = slot.querySelector(".media-placeholder");
-
-  if (!src || !type || !placeholder) {
-    return;
-  }
-
-  const activateMedia = (media) => {
-    placeholder.replaceWith(media);
-    slot.classList.remove("is-placeholder");
-
-    if (media.tagName === "VIDEO" && !slot.closest("[hidden]")) {
-      media.play().catch(() => {});
-    }
-  };
-
-  if (type === "image") {
-    const image = new Image();
-    image.alt = slot.dataset.mediaAlt || "";
-    image.addEventListener("load", () => activateMedia(image), { once: true });
-    image.src = src;
-    return;
-  }
-
-  if (type === "video") {
-    const video = document.createElement("video");
-    video.autoplay = true;
-    video.loop = true;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = "metadata";
-    video.setAttribute("aria-label", slot.dataset.mediaLabel || "Experiment video");
-
-    const source = document.createElement("source");
-    source.src = src;
-    source.type = "video/mp4";
-    video.append(source);
-    video.addEventListener("loadedmetadata", () => activateMedia(video), { once: true });
-    video.load();
-  }
+document.querySelectorAll("[data-video-sync-group]").forEach(async (group) => {
+  const videos = await getReadyVideos(group);
+  startSynchronizedVideos(videos, () => document.body.contains(group) && !group.closest("[hidden]"));
 });
 
 const mobileChartMedia = window.matchMedia("(max-width: 640px)");
